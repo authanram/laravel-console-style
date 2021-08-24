@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Authanram\LaravelConsoleStyle;
 
+use Illuminate\Support\Stringable;
+
 trait ConsoleStyle
 {
-    public function style(string $value): Style
+    public function style(Stringable|string $value): Style
     {
-        return new Style($value, $this);
+        return new Style((string)$value, $this);
     }
 }

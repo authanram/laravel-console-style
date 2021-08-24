@@ -170,7 +170,7 @@ class Style
         $this->command->newline($this->__newline);
     }
 
-    public function return(int $value = 0): int
+    public function return(mixed $value = 0): mixed
     {
         $this->output();
 
