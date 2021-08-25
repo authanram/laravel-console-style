@@ -7,6 +7,7 @@ namespace Authanram\LaravelConsoleStyle;
 class Style
 {
     private array $__append = [];
+    private array $__prepend = [];
     private bool $__bold = false;
     private bool $__output = false;
     private int $__break = 0;
@@ -133,6 +134,13 @@ class Style
         return $this;
     }
 
+    public function prepend(string $value): self
+    {
+        $this->__prepend[] = $value;
+
+        return $this;
+    }
+
     public function append(string $value): self
     {
         $this->__append[] = $value;
@@ -152,10 +160,14 @@ class Style
 
         $this->value = '<'.implode(';', $style).'>'.$this->value.'</>';
 
+        if (empty($this->__prepend) === false) {
+            $this->value = implode(' ', $this->__prepend).' '.$this->value;
+        }
+
         $this->value = str_repeat(' ', $this->__indent).$this->value;
 
         if (empty($this->__append) === false) {
-            $this->value .= ' '. implode(' ', $this->__append);
+            $this->value .= ' '.implode(' ', $this->__append);
         }
 
         return $this->value;
