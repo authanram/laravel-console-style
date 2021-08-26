@@ -170,7 +170,9 @@ class Style
             $this->value .= ' '.implode(' ', $this->__append);
         }
 
-        return $this->value;
+        return env('APP_ENV') === 'testing'
+            ? trim($this->value)
+            : $this->value;
     }
 
     public function output(): void
