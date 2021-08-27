@@ -171,7 +171,7 @@ class Style
         }
 
         return env('APP_ENV') === 'testing'
-            ? trim($this->value)
+            ? strip_tags(trim($this->value))
             : $this->value;
     }
 
