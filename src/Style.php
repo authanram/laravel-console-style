@@ -68,6 +68,14 @@ class Style
         return $this;
     }
 
+    public function success(): self
+    {
+        $this->__bg = 'green';
+        $this->__fg = 'white';
+
+        return $this;
+    }
+
     public function cyan(): self
     {
         $this->__fg = 'cyan';
