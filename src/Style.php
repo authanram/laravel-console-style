@@ -68,13 +68,6 @@ class Style
         return $this;
     }
 
-    public function success(): self
-    {
-        $this->__fg = 'green';
-
-        return $this;
-    }
-
     public function cyan(): self
     {
         $this->__fg = 'cyan';
@@ -148,16 +141,29 @@ class Style
         return $this;
     }
 
-    public function prepend(string $value): self
+    public function prepend(?string $value): self
     {
-        $this->__prepend[] = $value;
+        if (is_null($value) === false) {
+            $this->__prepend[] = $value;
+        }
 
         return $this;
     }
 
-    public function append(string $value): self
+    public function append(?string $value): self
     {
-        $this->__append[] = $value;
+        if (is_null($value) === false) {
+            $this->__append[] = $value;
+        }
+
+        return $this;
+    }
+
+    public function note(?string $value): self
+    {
+        if (is_null($value) === false) {
+            $this->append('<fg=gray>'.$value.'</>');
+        }
 
         return $this;
     }
