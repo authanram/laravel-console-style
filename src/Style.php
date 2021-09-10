@@ -70,8 +70,7 @@ class Style
 
     public function success(): self
     {
-        $this->__bg = 'green';
-        $this->__fg = 'white';
+        $this->__fg = 'green';
 
         return $this;
     }
@@ -93,6 +92,13 @@ class Style
     public function green(): self
     {
         $this->__fg = 'green';
+
+        return $this;
+    }
+
+    public function gray(): self
+    {
+        $this->__fg = 'gray';
 
         return $this;
     }
