@@ -1,2 +1,7 @@
+/.idea
+/.vscode
 /vendor
+.phpunit.result.cache
 composer.lock
+phpunit.xml
+scratch.md
