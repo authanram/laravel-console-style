@@ -6,160 +6,168 @@ namespace Authanram\LaravelConsoleStyle;
 
 class Style
 {
-    private array $__append = [];
-    private array $__prepend = [];
-    private bool $__bold = false;
-    private bool $__output = false;
-    private int $__break = 0;
-    private int $__indent = 0;
-    private int $__newline = 0;
-    private string $__bg = 'default';
-    private string $__fg = 'default';
+    private array $append = [];
+    private array $prepend = [];
+    private bool $bold = false;
+    private bool $stripTags;
+    private int $break = 0;
+    private int $indent = 0;
+    private int $newline = 0;
+    private int $paddingX = 0;
+    private int $paddingY = 0;
+    private string $bg = 'default';
+    private string $fg = 'default';
 
-    public function __construct(private string $value, private $command) {}
-
-    public function bold(): self
+    public function __construct(private string $value, private $command)
     {
-        $this->__bold = true;
+    }
+
+    public function bold(): static
+    {
+        $this->bold = true;
 
         return $this;
     }
 
-    public function break(int $count = 1): self
+    public function break(int $count = 1): static
     {
-        $this->__break = $count;
+        $this->break = $count;
 
         return $this;
     }
 
-    public function bg(string $color): self
+    public function bg(string $color, int $paddingX = 0, int $paddingY = 0): static
     {
-        $this->__bg = $color;
+        $this->bg = $color;
+
+        $this->paddingX = $paddingX;
+
+        $this->paddingY = $paddingY;
 
         return $this;
     }
 
-    public function fg(string $color): self
+    public function fg(string $color): static
     {
-        $this->__fg = $color;
+        $this->fg = $color;
 
         return $this;
     }
 
-    public function newline(int $count = 1): self
+    public function newline(int $count = 1): static
     {
-        $this->__newline = $count;
+        $this->newline = $count;
 
         return $this;
     }
 
-    public function indent(int $times = 1): self
+    public function indent(int $times = 1): static
     {
-        $this->__indent = $times;
+        $this->indent = $times;
 
         return $this;
     }
 
-    public function error(): self
+    public function error(): static
     {
-        $this->__bg = 'red';
-        $this->__fg = 'white';
+        $this->bg = 'red';
+        $this->fg = 'white';
 
         return $this;
     }
 
-    public function cyan(): self
+    public function cyan(): static
     {
-        $this->__fg = 'cyan';
+        $this->fg = 'cyan';
 
         return $this;
     }
 
-    public function red(): self
+    public function red(): static
     {
-        $this->__fg = 'red';
+        $this->fg = 'red';
 
         return $this;
     }
 
-    public function green(): self
+    public function green(): static
     {
-        $this->__fg = 'green';
+        $this->fg = 'green';
 
         return $this;
     }
 
-    public function gray(): self
+    public function gray(): static
     {
-        $this->__fg = 'gray';
+        $this->fg = 'gray';
 
         return $this;
     }
 
-    public function white(): self
+    public function white(): static
     {
-        $this->__fg = 'white';
+        $this->fg = 'white';
 
         return $this;
     }
 
-    public function yellow(): self
+    public function yellow(): static
     {
-        $this->__fg = 'yellow';
+        $this->fg = 'yellow';
 
         return $this;
     }
 
-    public function label(): self
+    public function label(): static
     {
-        $this->__fg = 'green';
+        $this->fg = 'green';
 
-        $this->__indent = 1;
+        $this->indent = 1;
 
         $this->value .= ':';
 
         return $this;
     }
 
-    public function title(): self
+    public function title(): static
     {
-        $this->__bold = true;
+        $this->bold = true;
 
-        $this->__fg = 'white';
+        $this->fg = 'white';
 
-        $this->__indent = 1;
+        $this->indent = 1;
 
-        $this->__newline = 1;
+        $this->newline = 1;
 
         return $this;
     }
 
-    public function paragraph(): self
+    public function paragraph(): static
     {
         $this->value = ' <fg=gray>▕</> '.$this->value;
 
         return $this;
     }
 
-    public function prepend(?string $value): self
+    public function prepend(self|string|null $value): static
     {
-        if (is_null($value) === false) {
-            $this->__prepend[] = $value;
+        if (is_null($value) === false || (is_string($value) && trim($value) === '')) {
+            $this->prepend[] = (string)$value;
         }
 
         return $this;
     }
 
-    public function append(?string $value): self
+    public function append(self|string|null $value): static
     {
-        if (is_null($value) === false) {
-            $this->__append[] = $value;
+        if (is_null($value) === false || (is_string($value) && trim($value) === '')) {
+            $this->append[] = (string)$value;
         }
 
         return $this;
     }
 
-    public function note(?string $value): self
+    public function note(?string $value): static
     {
         if (is_null($value) === false) {
             $this->append('<fg=gray>'.$value.'</>');
@@ -168,55 +176,67 @@ class Style
         return $this;
     }
 
-    public function getOutput(): string
+    public function stripTags(): static
     {
-        $this->__output = true;
+        $this->stripTags = true;
 
+        return $this;
+    }
+
+    public function exit(int $exitCode = 0): int
+    {
+        $this->command->newline($this->break);
+
+        $this->command->line($this->toString());
+
+        $this->command->newline($this->newline);
+
+        return $exitCode;
+    }
+
+    public function failure(): int
+    {
+        return $this->exit(1);
+    }
+
+    public function success(): int
+    {
+        return $this->exit();
+    }
+
+    public function toString(): string
+    {
         $style = [];
-        $style[] = $this->__bold ? 'options=bold' : '';
-        $style[] = $this->__bg ? "bg=$this->__bg" : '';
-        $style[] = $this->__fg ? "fg=$this->__fg" : '';
+        $style[] = $this->bold ? 'options=bold' : '';
+        $style[] = $this->bg ? "bg=$this->bg" : '';
+        $style[] = $this->fg ? "fg=$this->fg" : '';
         $style = array_filter($style);
+
+        $paddingX = str_repeat(' ', $this->paddingX);
+
+        $this->value = $paddingX.$this->value.$paddingX;
+
+        $paddingY = str_repeat("\n", $this->paddingY);
+
+        $this->value = $paddingY.$this->value.$paddingY;
 
         $this->value = '<'.implode(';', $style).'>'.$this->value.'</>';
 
-        if (empty($this->__prepend) === false) {
-            $this->value = implode(' ', $this->__prepend).' '.$this->value;
+        if (empty($this->prepend) === false) {
+            $this->value = implode(' ', $this->prepend).' '.$this->value;
         }
 
-        $this->value = str_repeat(' ', $this->__indent).$this->value;
+        $this->value = str_repeat(' ', $this->indent).$this->value;
 
-        if (empty($this->__append) === false) {
-            $this->value .= ' '.implode(' ', $this->__append);
+        if (empty($this->append) === false) {
+            $this->value .= ' '.implode(' ', $this->append);
         }
 
-        return env('APP_ENV') === 'testing'
-            ? strip_tags(trim($this->value))
-            : $this->value;
+        return $this->stripTags ? strip_tags(trim($this->value)) : $this->value;
     }
 
-    public function output(): void
+    public function __toString(): string
     {
-        $this->command->newline($this->__break);
-
-        $this->command->line($this->getOutput());
-
-        $this->command->newline($this->__newline);
-    }
-
-    public function return(mixed $value = 0): mixed
-    {
-        $this->output();
-
-        return $value;
-    }
-
-    public function __destruct()
-    {
-        if ($this->__output) {
-            return;
-        }
-
-        $this->output();
+        return $this->toString();
     }
 }
