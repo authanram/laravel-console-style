@@ -9,16 +9,16 @@ class Style
     private array $append = [];
     private array $prepend = [];
     private bool $bold = false;
-    private bool $stripTags;
-    private int $break = 0;
+    private bool $output = true;
+    private bool $stripTags = false;
+    private int $bgIndent = 0;
     private int $indent = 0;
     private int $newline = 0;
-    private int $paddingX = 0;
-    private int $paddingY = 0;
+    private int $newlineBefore = 0;
     private string $bg = 'default';
     private string $fg = 'default';
 
-    public function __construct(private string $value, private $command)
+    public function __construct(private ?string $value, private $command)
     {
     }
 
@@ -29,20 +29,11 @@ class Style
         return $this;
     }
 
-    public function break(int $count = 1): static
-    {
-        $this->break = $count;
-
-        return $this;
-    }
-
-    public function bg(string $color, int $paddingX = 0, int $paddingY = 0): static
+    public function bg(string $color, int $indent = 0): static
     {
         $this->bg = $color;
 
-        $this->paddingX = $paddingX;
-
-        $this->paddingY = $paddingY;
+        $this->bgIndent = $indent;
 
         return $this;
     }
@@ -54,8 +45,14 @@ class Style
         return $this;
     }
 
-    public function newline(int $count = 1): static
+    public function newline(int $count = 1, bool $before = false): static
     {
+        if ($before) {
+            $this->newlineBefore = $count;
+
+            return $this;
+        }
+
         $this->newline = $count;
 
         return $this;
@@ -64,6 +61,15 @@ class Style
     public function indent(int $times = 1): static
     {
         $this->indent = $times;
+
+        return $this;
+    }
+
+    public function gap($count = 1): static
+    {
+        $this->newlineBefore = $count;
+
+        $this->newline = $count;
 
         return $this;
     }
@@ -149,7 +155,7 @@ class Style
         return $this;
     }
 
-    public function prepend(self|string|null $value): static
+    public function prepend(mixed $value): static
     {
         if (is_null($value) === false || (is_string($value) && trim($value) === '')) {
             $this->prepend[] = (string)$value;
@@ -158,7 +164,7 @@ class Style
         return $this;
     }
 
-    public function append(self|string|null $value): static
+    public function append(mixed $value): static
     {
         if (is_null($value) === false || (is_string($value) && trim($value) === '')) {
             $this->append[] = (string)$value;
@@ -167,7 +173,7 @@ class Style
         return $this;
     }
 
-    public function note(?string $value): static
+    public function note(mixed $value): static
     {
         if (is_null($value) === false) {
             $this->append('<fg=gray>'.$value.'</>');
@@ -185,11 +191,11 @@ class Style
 
     public function exit(int $exitCode = 0): int
     {
-        $this->command->newline($this->break);
+        $this->command->getOutput()->newline($this->newlineBefore);
 
         $this->command->line($this->toString());
 
-        $this->command->newline($this->newline);
+        $this->command->getOutput()->newline($this->newline);
 
         return $exitCode;
     }
@@ -206,19 +212,21 @@ class Style
 
     public function toString(): string
     {
+        $this->output = false;
+
         $style = [];
+
         $style[] = $this->bold ? 'options=bold' : '';
+
         $style[] = $this->bg ? "bg=$this->bg" : '';
+
         $style[] = $this->fg ? "fg=$this->fg" : '';
+
         $style = array_filter($style);
 
-        $paddingX = str_repeat(' ', $this->paddingX);
+        $bgIndent = str_repeat(' ', $this->bgIndent);
 
-        $this->value = $paddingX.$this->value.$paddingX;
-
-        $paddingY = str_repeat("\n", $this->paddingY);
-
-        $this->value = $paddingY.$this->value.$paddingY;
+        $this->value = $bgIndent.$this->value.$bgIndent;
 
         $this->value = '<'.implode(';', $style).'>'.$this->value.'</>';
 
@@ -238,5 +246,14 @@ class Style
     public function __toString(): string
     {
         return $this->toString();
+    }
+
+    public function __destruct()
+    {
+        if ($this->output === false) {
+            return;
+        }
+
+        $this->exit();
     }
 }

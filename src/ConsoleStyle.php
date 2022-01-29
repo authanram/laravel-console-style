@@ -8,8 +8,8 @@ use Illuminate\Support\Stringable;
 
 trait ConsoleStyle
 {
-    public function style(Stringable|string $value): Style
+    public function style(Stringable|Style|string|null $value = null): Style
     {
-        return new Style((string)$value, $this);
+        return new Style(is_null($value) ? $value : (string)$value, $this);
     }
 }
